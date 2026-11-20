@@ -1,0 +1,8 @@
+target/
+results/
+probe-footage.mp4
+results-ollama.log
+.env
+.env.*
+*.key
+*.pem
