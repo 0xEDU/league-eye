@@ -34,6 +34,14 @@ cargo run --release -- --input probe-footage.mp4 --output results --resume
 
 `observations.jsonl` is the source of truth. The program flushes each record before atomically replacing `checkpoint.json`.
 
+## Evaluate clock experiments
+
+```sh
+cargo run --release --bin evaluate_clock -- \
+  --labels labels/clock-smoke.jsonl \
+  --observations results/clock-text-x605/observations.jsonl
+```
+
 ## Results
 
 - `video.json`: FFprobe metadata
