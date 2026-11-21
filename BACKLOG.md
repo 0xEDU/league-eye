@@ -9,8 +9,8 @@
 - Clock readings from the broad top crop are not reliable enough for use.
 - Champion, KDA, CS, health, and mana values are not reliable enough for use.
 - Validation preserves raw model values and records implausible or temporally inconsistent values.
-- Seven manually verified clock labels show an exact 7/7 result for crop `605:0:35:25` in one clean video segment.
-- Lanczos scaling with JPEG quality 1 also scores 7/7 on those labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
+- The 20-label clock fixture shows crop `605:0:35:25` is exact on 10/20 frames with 69.45 seconds MAE. It is not ready as a standalone reader.
+- Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
 - Champion, KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
@@ -28,7 +28,7 @@
 - [x] Select among multiple crop candidates only when they match a manually verified clock anchor and expected interval.
 - [ ] Test upscale factors and JPEG qualities on the expanded 20-frame label set.
 - [x] Reject nearest-neighbor scaling on the current verified clock labels.
-- [ ] Compare `605:0:35:25` with other crop candidates on the expanded label set.
+- [ ] Compare `605:0:35:25` with other crop candidates and anchored selection on the expanded label set.
 
 ## P1: Champion Detection
 
