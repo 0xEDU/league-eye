@@ -14,7 +14,8 @@
 - Multiple crops can agree on an incorrect clock value, so source votes remain audit data rather than an acceptance rule.
 - Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
 - The user-provided ground truth identifies the early player as skin Qiyana. The earlier Aphelios label was incorrect.
-- Existing multi-crop, pixel-retrieval, and candidate-only portrait results are invalid for Qiyana and must be rerun against this fixture.
+- Existing multi-crop portrait consensus scores 0/5 against Qiyana. Candidate-only prompting with Qiyana included also scores 0/5 and returns Sona for every frame.
+- Skin-aware pixel retrieval ranks Qiyana second behind Katarina in the four-champion cache, so it remains a candidate source only.
 - KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
