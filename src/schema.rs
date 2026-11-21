@@ -50,6 +50,20 @@ pub fn clock_response_schema() -> serde_json::Value {
     },"required":["clock"],"additionalProperties":false})
 }
 
+pub fn resource_response_schema() -> serde_json::Value {
+    serde_json::json!({"type":"object","properties":{
+      "game_time_seconds":{"type":"null"},
+      "champion":{"type":"null"},
+      "level":{"type":"null"},
+      "kills":{"type":"null"},
+      "deaths":{"type":"null"},
+      "assists":{"type":"null"},
+      "cs":{"type":"null"},
+      "health":{"type":["number","null"],"minimum":0},
+      "mana":{"type":["number","null"],"minimum":0}
+    },"required":["game_time_seconds","champion","level","kills","deaths","assists","cs","health","mana"],"additionalProperties":false})
+}
+
 pub fn parse_clock(value: &str) -> Option<u32> {
     let (minutes, seconds) = value.split_once(':')?;
     let minutes: u32 = minutes.parse().ok()?;

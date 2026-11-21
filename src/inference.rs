@@ -1,4 +1,4 @@
-use crate::schema::{Extraction, clock_response_schema, response_schema};
+use crate::schema::{Extraction, clock_response_schema, resource_response_schema, response_schema};
 use anyhow::{Context, Result};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use reqwest::Client;
@@ -9,6 +9,7 @@ const FULL_PROMPT: &str = "Read only visible League of Legends HUD values. Retur
 const BOTTOM_HUD_PROMPT: &str = "This image is the bottom player HUD of a League of Legends game. Read only clearly visible player champion, level, KDA, creep score, health, and mana values. Set game_time_seconds to null. Return null for unreadable values. Do not infer. Return only data matching the supplied schema.";
 const TOP_HUD_PROMPT: &str = "This image is the top HUD of a League of Legends game. Read only the clearly visible in-game clock and convert it to seconds. Set all other fields to null. Do not infer. Return only data matching the supplied schema.";
 const CLOCK_PROMPT: &str = "This image contains a League of Legends in-game timer. Transcribe only the visible timer text exactly as m:ss. Do not convert it to seconds. Do not infer. Return null if any digit is unreadable.";
+const RESOURCE_PROMPT: &str = "This image contains only the player health and mana HUD bars from a League of Legends game. Read the current numeric health and mana values only when clearly visible. Set game_time_seconds, champion, level, kills, deaths, assists, and cs to null. Return null for unreadable values. Do not infer. Return only data matching the supplied schema.";
 
 #[derive(Deserialize)]
 struct Generate {
@@ -49,7 +50,10 @@ pub async fn extract(
         "bottom-hud" => (BOTTOM_HUD_PROMPT, response_schema()),
         "top-hud" => (TOP_HUD_PROMPT, response_schema()),
         "clock-text" => (CLOCK_PROMPT, clock_response_schema()),
-        _ => anyhow::bail!("prompt profile must be full, bottom-hud, top-hud, or clock-text"),
+        "resource-hud" => (RESOURCE_PROMPT, resource_response_schema()),
+        _ => anyhow::bail!(
+            "prompt profile must be full, bottom-hud, top-hud, clock-text, or resource-hud"
+        ),
     };
     let body = serde_json::json!({"model":model,"prompt":prompt,"images":[STANDARD.encode(jpeg)],"format":format,"stream":false,"options":{"temperature":0,"num_predict":max_tokens}});
     let r: Generate = client
