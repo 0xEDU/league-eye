@@ -36,8 +36,15 @@ struct Observation {
 struct Selection {
     video_timestamp_ms: u64,
     candidates_seconds: Vec<u32>,
+    candidate_votes: Vec<CandidateVote>,
     selected_seconds: Option<u32>,
     status: String,
+}
+
+#[derive(Serialize)]
+struct CandidateVote {
+    seconds: u32,
+    sources: usize,
 }
 
 fn load(path: &PathBuf) -> Result<Vec<Observation>> {
@@ -90,6 +97,7 @@ fn main() -> Result<()> {
         serde_json::to_string(&Selection {
             video_timestamp_ms: seed_timestamp_ms,
             candidates_seconds: Vec::new(),
+            candidate_votes: Vec::new(),
             selected_seconds: Some(seed_seconds),
             status: "verified_seed".to_string(),
         })?
@@ -100,6 +108,12 @@ fn main() -> Result<()> {
             continue;
         }
         candidates.sort_unstable();
+        let votes = candidates
+            .iter()
+            .fold(BTreeMap::new(), |mut votes, candidate| {
+                *votes.entry(*candidate).or_insert(0_usize) += 1;
+                votes
+            });
         candidates.dedup();
         let (previous_timestamp, previous_value) = previous.expect("verified seed is required");
         let expected = previous_value + ((timestamp - previous_timestamp) / 1000) as u32;
@@ -110,7 +124,10 @@ fn main() -> Result<()> {
         let (selected, status) = match candidate
             .filter(|candidate| candidate.abs_diff(expected) <= args.max_drift_seconds)
         {
-            Some(candidate) => (Some(candidate), "selected_near_expected".to_string()),
+            Some(candidate) if votes[&candidate] > 1 => {
+                (Some(candidate), "selected_multi_crop".to_string())
+            }
+            Some(candidate) => (Some(candidate), "selected_single_crop".to_string()),
             None => (None, "no_candidate_near_expected".to_string()),
         };
         if let Some(value) = selected {
@@ -119,6 +136,10 @@ fn main() -> Result<()> {
         let record = Selection {
             video_timestamp_ms: timestamp,
             candidates_seconds: candidates,
+            candidate_votes: votes
+                .into_iter()
+                .map(|(seconds, sources)| CandidateVote { seconds, sources })
+                .collect(),
             selected_seconds: selected,
             status,
         };

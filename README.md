@@ -70,7 +70,7 @@ cargo run --release --bin evaluate_clock -- \
 
 ## Select clock candidates
 
-Use a manually verified clock reading as the seed. The selector preserves every crop candidate and returns null when no candidate fits the expected next clock range.
+Use a manually verified clock reading as the seed. The selector preserves every crop candidate, reports the source count for each candidate, and returns null when no candidate fits the expected next clock range. Source agreement is diagnostic data, not a guarantee of correctness.
 
 ```sh
 cargo run --release --bin select_clock_candidates -- \
