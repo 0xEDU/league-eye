@@ -13,9 +13,8 @@
 - Anchored selection over four timer crops reaches 14/20 exact with 18/20 coverage and 0.67 seconds MAE on emitted readings.
 - Multiple crops can agree on an incorrect clock value, so source votes remain audit data rather than an acceptance rule.
 - Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
-- Five manual portrait labels identify the early player as Aphelios. The multi-crop gate scores 4/5 on this small fixture and remains experimental.
-- Skin-aware pixel retrieval still ranks Katarina above the labeled Aphelios portrait, so it is rejected as a champion decision rule.
-- Constraining the vision model to four retrieved candidate names selected Sona on all five Aphelios labels, so candidate-only prompting is rejected for this model and crop.
+- The user-provided ground truth identifies the early player as skin Qiyana. The earlier Aphelios label was incorrect.
+- Existing multi-crop, pixel-retrieval, and candidate-only portrait results are invalid for Qiyana and must be rerun against this fixture.
 - KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
@@ -43,7 +42,7 @@
 - [x] Add a local cache path for per-skin round HUD portraits.
 - [x] Add a portrait-only VLM profile with a one-field schema.
 - [x] Reject portrait names that do not reach a unique multi-crop consensus.
-- [x] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.
+- [x] Register user-provided Qiyana ground truth for the early portrait frames.
 - [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
 - [x] Test a vision-model choice from retrieved candidates or null.
 - [ ] Require a score margin before accepting a champion result.
