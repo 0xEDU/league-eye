@@ -4,6 +4,7 @@
 
 - Video sampling, FFmpeg cropping, local Ollama inference, typed JSONL output, resume, and validation work.
 - A non-resume run now rejects an output directory with observations, preventing duplicate records after an interrupted run.
+- An exclusive output lock prevents two runs from appending to one observation file at the same time.
 - The instruction model produces valid JSON reliably.
 - Clock readings from the broad top crop are not reliable enough for use.
 - Champion, KDA, CS, health, and mana values are not reliable enough for use.

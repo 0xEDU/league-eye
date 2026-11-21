@@ -80,6 +80,7 @@ async fn main() -> Result<()> {
         a.resume || !a.output.join("observations.jsonl").exists(),
         "output already contains observations; use --resume or choose a new output directory"
     );
+    let _run_lock = persistence::acquire_run_lock(&a.output)?;
     let meta = video::metadata(&a.input)?;
     fs::write(
         a.output.join("video.json"),

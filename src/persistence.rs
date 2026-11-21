@@ -18,6 +18,33 @@ pub struct Checkpoint {
     pub failed: u64,
     pub updated_unix_ms: u128,
 }
+
+pub struct RunLock {
+    path: std::path::PathBuf,
+}
+
+impl Drop for RunLock {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+pub fn acquire_run_lock(dir: &Path) -> Result<RunLock> {
+    let path = dir.join("run.lock");
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .with_context(|| {
+            format!(
+                "output has an active or stale lock at {}; verify no run is active, then remove this lock",
+                path.display()
+            )
+        })?;
+    writeln!(file, "pid={}", std::process::id())?;
+    file.sync_data()?;
+    Ok(RunLock { path })
+}
 pub fn completed(dir: &Path, source: &str, config: &str) -> Result<HashSet<String>> {
     let p = dir.join("observations.jsonl");
     if !p.exists() {
@@ -67,4 +94,22 @@ pub fn checkpoint(dir: &Path, cp: &Checkpoint) -> Result<()> {
     fs::write(&temp, serde_json::to_vec_pretty(cp)?)?;
     fs::rename(temp, dir.join("checkpoint.json")).context("replace checkpoint")?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::acquire_run_lock;
+    use std::fs;
+
+    #[test]
+    fn prevents_concurrent_runs_and_releases_after_drop() {
+        let path = std::env::temp_dir().join(format!("league-vision-lock-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&path);
+        fs::create_dir(&path).unwrap();
+        let lock = acquire_run_lock(&path).unwrap();
+        assert!(acquire_run_lock(&path).is_err());
+        drop(lock);
+        assert!(acquire_run_lock(&path).is_ok());
+        fs::remove_dir_all(&path).unwrap();
+    }
 }
