@@ -11,7 +11,7 @@
 
 ## P0: Establish Measurement
 
-- [ ] Expand the manually verified clock set from 3 to 20 frames.
+- [ ] Expand the manually verified clock set from 7 to 20 frames.
 - [ ] Label 20 representative frames with champion, level, KDA, CS, health, and mana where readable.
 - [x] Define exact-match and mean-absolute-error metrics for clock readings.
 - [x] Build a reproducible clock evaluation command for labeled frames.
