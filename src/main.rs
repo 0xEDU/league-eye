@@ -39,6 +39,12 @@ struct Args {
     crop: Option<String>,
     #[arg(long, default_value_t = 3)]
     jpeg_quality: u8,
+    #[arg(long, default_value_t = 1)]
+    burst_frames: u32,
+    #[arg(long, default_value_t = 0)]
+    burst_radius_ms: u64,
+    #[arg(long, default_value = "sharpest")]
+    burst_strategy: String,
     #[arg(long, default_value_t = 512)]
     max_tokens: u16,
     #[arg(long, default_value_t = 0)]
@@ -92,7 +98,11 @@ async fn main() -> Result<()> {
     )?;
     let duration = video::duration_seconds(&meta)?;
     let source = fingerprint(&a.input)?;
-    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"resize_filter":a.resize_filter,"jpeg_quality":a.jpeg_quality,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"champion_candidates":a.champion_candidates,"clock_candidates":a.clock_candidates,"experiment":a.experiment});
+    anyhow::ensure!(
+        a.burst_frames > 0 && a.burst_frames % 2 == 1,
+        "burst frames must be a positive odd number"
+    );
+    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"resize_filter":a.resize_filter,"jpeg_quality":a.jpeg_quality,"burst_frames":a.burst_frames,"burst_radius_ms":a.burst_radius_ms,"burst_strategy":a.burst_strategy,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"champion_candidates":a.champion_candidates,"clock_candidates":a.clock_candidates,"experiment":a.experiment});
     let config = format!("{:x}", Sha256::digest(serde_json::to_vec(&cfg)?));
     let client = Client::new();
     inference::check_model(&client, &a.ollama, &a.model).await?;
@@ -132,13 +142,16 @@ async fn main() -> Result<()> {
         attempted += 1;
         let result = async {
             let prep = Instant::now();
-            let jpg = video::frame_jpeg(
+            let jpg = video::burst_jpeg(
                 &a.input,
                 ms,
                 a.crop.as_deref(),
                 a.max_width,
                 &a.resize_filter,
                 a.jpeg_quality,
+                a.burst_frames,
+                a.burst_radius_ms,
+                &a.burst_strategy,
             )?;
             let preprocess = prep.elapsed().as_millis();
             let began = Instant::now();
