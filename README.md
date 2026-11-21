@@ -42,6 +42,18 @@ cargo run --release --bin evaluate_clock -- \
   --observations results/clock-text-x605/observations.jsonl
 ```
 
+## Select clock candidates
+
+Use a manually verified clock reading as the seed. The selector preserves every crop candidate and returns null when no candidate fits the expected next clock range.
+
+```sh
+cargo run --release --bin select_clock_candidates -- \
+  --observations results/clock-text-x605-v2/observations.jsonl \
+  --output results/clock-ensemble.jsonl \
+  --seed-timestamp-ms 90000 \
+  --seed-seconds 132
+```
+
 ## Results
 
 - `video.json`: FFprobe metadata

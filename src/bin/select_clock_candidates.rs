@@ -1,0 +1,105 @@
+use anyhow::{Context, Result};
+use clap::Parser;
+use serde::{Deserialize, Serialize};
+use std::{collections::BTreeMap, fs, path::PathBuf};
+
+#[derive(Parser)]
+struct Args {
+    #[arg(long, required = true, num_args = 1..)]
+    observations: Vec<PathBuf>,
+    #[arg(long)]
+    output: PathBuf,
+    #[arg(long, default_value_t = 15)]
+    max_drift_seconds: u32,
+    #[arg(long)]
+    seed_timestamp_ms: Option<u64>,
+    #[arg(long)]
+    seed_seconds: Option<u32>,
+}
+
+#[derive(Deserialize)]
+struct Extraction {
+    game_time_seconds: Option<u32>,
+}
+
+#[derive(Deserialize)]
+struct Observation {
+    video_timestamp_ms: u64,
+    extraction: Extraction,
+}
+
+#[derive(Serialize)]
+struct Selection {
+    video_timestamp_ms: u64,
+    candidates_seconds: Vec<u32>,
+    selected_seconds: Option<u32>,
+    status: String,
+}
+
+fn load(path: &PathBuf) -> Result<Vec<Observation>> {
+    fs::read_to_string(path)
+        .with_context(|| format!("read {}", path.display()))?
+        .lines()
+        .map(serde_json::from_str)
+        .collect::<serde_json::Result<Vec<_>>>()
+        .context("decode observation JSONL")
+}
+
+fn main() -> Result<()> {
+    let args = Args::parse();
+    anyhow::ensure!(
+        args.seed_timestamp_ms.is_some() == args.seed_seconds.is_some(),
+        "seed timestamp and seed seconds must be provided together"
+    );
+    let mut grouped: BTreeMap<u64, Vec<u32>> = BTreeMap::new();
+    for path in &args.observations {
+        for observation in load(path)? {
+            if let Some(value) = observation.extraction.game_time_seconds {
+                grouped
+                    .entry(observation.video_timestamp_ms)
+                    .or_default()
+                    .push(value);
+            }
+        }
+    }
+    let mut output = String::new();
+    let mut previous = args.seed_timestamp_ms.zip(args.seed_seconds);
+    for (timestamp, mut candidates) in grouped {
+        if args.seed_timestamp_ms.is_some_and(|seed| timestamp <= seed) {
+            continue;
+        }
+        candidates.sort_unstable();
+        candidates.dedup();
+        let (selected, status) = if let Some((previous_timestamp, previous_value)) = previous {
+            let expected = previous_value + ((timestamp - previous_timestamp) / 1000) as u32;
+            let candidate = candidates
+                .iter()
+                .min_by_key(|candidate| candidate.abs_diff(expected))
+                .copied();
+            match candidate
+                .filter(|candidate| candidate.abs_diff(expected) <= args.max_drift_seconds)
+            {
+                Some(candidate) => (Some(candidate), "selected_near_expected".to_string()),
+                None => (None, "no_candidate_near_expected".to_string()),
+            }
+        } else {
+            (
+                candidates.get(candidates.len() / 2).copied(),
+                "selected_median_unanchored".to_string(),
+            )
+        };
+        if let Some(value) = selected {
+            previous = Some((timestamp, value));
+        }
+        let record = Selection {
+            video_timestamp_ms: timestamp,
+            candidates_seconds: candidates,
+            selected_seconds: selected,
+            status,
+        };
+        output.push_str(&serde_json::to_string(&record)?);
+        output.push('\n');
+    }
+    fs::write(&args.output, output).with_context(|| format!("write {}", args.output.display()))?;
+    Ok(())
+}
