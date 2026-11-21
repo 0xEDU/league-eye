@@ -26,6 +26,32 @@ cargo run --release -- --input probe-footage.mp4 --output results
 
 The default interval is 10 seconds. Use `--limit 10` for an initial test. Use `--max-width 1280` to benchmark a resized full frame. Use `--crop x:y:width:height` only for a separate crop experiment.
 
+For the tested 640×360 broadcast layout, the evaluated timer reader uses a tight top-right crop:
+
+```sh
+cargo run --release -- \
+  --input probe-footage.mp4 \
+  --output results/clock \
+  --crop 605:0:35:25 \
+  --max-width 1200 \
+  --max-tokens 64 \
+  --prompt-profile clock-text \
+  --experiment clock-text-v1
+```
+
+The health and mana experiment uses a separate bottom-HUD crop:
+
+```sh
+cargo run --release -- \
+  --input probe-footage.mp4 \
+  --output results/resources \
+  --crop 180:310:260:50 \
+  --max-width 1080 \
+  --max-tokens 128 \
+  --prompt-profile resource-hud \
+  --experiment resource-hud-v1
+```
+
 ## Resume
 
 ```sh
