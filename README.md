@@ -80,6 +80,14 @@ cargo run --release --bin select_clock_candidates -- \
   --seed-seconds 132
 ```
 
+## Summarize an experiment
+
+```sh
+cargo run --release --bin summarize_observations -- \
+  --observations results/clock-text-x605-v2/observations.jsonl \
+  --progress results/clock-text-x605-v2/progress.json
+```
+
 ## Results
 
 - `video.json`: FFprobe metadata
