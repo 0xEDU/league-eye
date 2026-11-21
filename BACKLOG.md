@@ -13,7 +13,8 @@
 - Anchored selection over four timer crops reaches 14/20 exact with 18/20 coverage and 0.67 seconds MAE on emitted readings.
 - Multiple crops can agree on an incorrect clock value, so source votes remain audit data rather than an acceptance rule.
 - Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
-- Champion, KDA, CS, health, and mana accuracy remain unverified.
+- Five manual portrait labels identify the early player as Aphelios. The multi-crop gate scores 4/5 on this small fixture and remains experimental.
+- KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
 
@@ -39,7 +40,7 @@
 - [x] Prototype pixel-distance and native feature-print retrieval.
 - [x] Add a portrait-only VLM profile with a one-field schema.
 - [x] Reject portrait names that do not reach a unique multi-crop consensus.
-- [ ] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.
+- [x] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.
 - [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
 - [ ] Ask the vision model to choose only from retrieved candidates or return null.
 - [ ] Require a score margin before accepting a champion result.

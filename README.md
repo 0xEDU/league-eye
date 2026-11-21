@@ -99,6 +99,14 @@ cargo run --release --bin select_champion_candidates -- \
   --min-votes 2
 ```
 
+Evaluate selected champion names with a manual label fixture:
+
+```sh
+cargo run --release --bin evaluate_champion_selection -- \
+  --labels labels/champion-smoke.jsonl \
+  --selections results/champion-consensus.jsonl
+```
+
 ## Summarize an experiment
 
 ```sh
