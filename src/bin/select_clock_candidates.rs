@@ -48,8 +48,8 @@ fn load(path: &PathBuf) -> Result<Vec<Observation>> {
 fn main() -> Result<()> {
     let args = Args::parse();
     anyhow::ensure!(
-        args.seed_timestamp_ms.is_some() == args.seed_seconds.is_some(),
-        "seed timestamp and seed seconds must be provided together"
+        args.seed_timestamp_ms.is_some() && args.seed_seconds.is_some(),
+        "a verified seed timestamp and seed seconds are required"
     );
     let mut grouped: BTreeMap<u64, Vec<u32>> = BTreeMap::new();
     for path in &args.observations {
@@ -70,23 +70,17 @@ fn main() -> Result<()> {
         }
         candidates.sort_unstable();
         candidates.dedup();
-        let (selected, status) = if let Some((previous_timestamp, previous_value)) = previous {
-            let expected = previous_value + ((timestamp - previous_timestamp) / 1000) as u32;
-            let candidate = candidates
-                .iter()
-                .min_by_key(|candidate| candidate.abs_diff(expected))
-                .copied();
-            match candidate
-                .filter(|candidate| candidate.abs_diff(expected) <= args.max_drift_seconds)
-            {
-                Some(candidate) => (Some(candidate), "selected_near_expected".to_string()),
-                None => (None, "no_candidate_near_expected".to_string()),
-            }
-        } else {
-            (
-                candidates.get(candidates.len() / 2).copied(),
-                "selected_median_unanchored".to_string(),
-            )
+        let (previous_timestamp, previous_value) = previous.expect("verified seed is required");
+        let expected = previous_value + ((timestamp - previous_timestamp) / 1000) as u32;
+        let candidate = candidates
+            .iter()
+            .min_by_key(|candidate| candidate.abs_diff(expected))
+            .copied();
+        let (selected, status) = match candidate
+            .filter(|candidate| candidate.abs_diff(expected) <= args.max_drift_seconds)
+        {
+            Some(candidate) => (Some(candidate), "selected_near_expected".to_string()),
+            None => (None, "no_candidate_near_expected".to_string()),
         };
         if let Some(value) = selected {
             previous = Some((timestamp, value));
