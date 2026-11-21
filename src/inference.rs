@@ -1,4 +1,7 @@
-use crate::schema::{Extraction, clock_response_schema, resource_response_schema, response_schema};
+use crate::schema::{
+    Extraction, champion_response_schema, clock_response_schema, resource_response_schema,
+    response_schema,
+};
 use anyhow::{Context, Result};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use reqwest::Client;
@@ -10,6 +13,7 @@ const BOTTOM_HUD_PROMPT: &str = "This image is the bottom player HUD of a League
 const TOP_HUD_PROMPT: &str = "This image is the top HUD of a League of Legends game. Read only the clearly visible in-game clock and convert it to seconds. Set all other fields to null. Do not infer. Return only data matching the supplied schema.";
 const CLOCK_PROMPT: &str = "This image contains a League of Legends in-game timer. Transcribe only the visible timer text exactly as m:ss. Do not convert it to seconds. Do not infer. Return null if any digit is unreadable.";
 const RESOURCE_PROMPT: &str = "This image contains only the player health and mana HUD bars from a League of Legends game. Read the current numeric health and mana values only when clearly visible. Set game_time_seconds, champion, level, kills, deaths, assists, and cs to null. Return null for unreadable values. Do not infer. Return only data matching the supplied schema.";
+const PORTRAIT_PROMPT: &str = "This image contains a League of Legends champion portrait. Identify the champion only when the portrait is clear. Set every non-champion field to null. Return null instead of guessing. Return only data matching the supplied schema.";
 
 #[derive(Deserialize)]
 struct Generate {
@@ -21,6 +25,11 @@ struct Generate {
 #[derive(Deserialize)]
 struct ClockResponse {
     clock: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct ChampionResponse {
+    champion: Option<String>,
 }
 pub async fn check_model(client: &Client, endpoint: &str, model: &str) -> Result<()> {
     let v: serde_json::Value = client
@@ -51,8 +60,9 @@ pub async fn extract(
         "top-hud" => (TOP_HUD_PROMPT, response_schema()),
         "clock-text" => (CLOCK_PROMPT, clock_response_schema()),
         "resource-hud" => (RESOURCE_PROMPT, resource_response_schema()),
+        "portrait" => (PORTRAIT_PROMPT, champion_response_schema()),
         _ => anyhow::bail!(
-            "prompt profile must be full, bottom-hud, top-hud, clock-text, or resource-hud"
+            "prompt profile must be full, bottom-hud, top-hud, clock-text, resource-hud, or portrait"
         ),
     };
     let body = serde_json::json!({"model":model,"prompt":prompt,"images":[STANDARD.encode(jpeg)],"format":format,"stream":false,"options":{"temperature":0,"num_predict":max_tokens}});
@@ -81,6 +91,13 @@ pub async fn extract(
                 .as_deref()
                 .and_then(crate::schema::parse_clock),
             raw_clock: response.clock,
+            ..Default::default()
+        }
+    } else if prompt_profile == "portrait" {
+        let response: ChampionResponse = serde_json::from_str(&r.response)
+            .with_context(|| format!("decode champion JSON: {}", r.response))?;
+        Extraction {
+            champion: response.champion,
             ..Default::default()
         }
     } else {
