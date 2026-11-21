@@ -159,3 +159,33 @@ pub fn validate_temporal(
     }
     errors
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Extraction, parse_clock, validate_temporal};
+
+    #[test]
+    fn parses_valid_clock_text() {
+        assert_eq!(parse_clock("02:34"), Some(154));
+        assert_eq!(parse_clock("2:60"), None);
+        assert_eq!(parse_clock("bad"), None);
+    }
+
+    #[test]
+    fn flags_backward_and_fast_clock_changes() {
+        let previous = Extraction {
+            game_time_seconds: Some(120),
+            ..Default::default()
+        };
+        let backward = Extraction {
+            game_time_seconds: Some(110),
+            ..Default::default()
+        };
+        let fast = Extraction {
+            game_time_seconds: Some(200),
+            ..Default::default()
+        };
+        assert_eq!(validate_temporal(&previous, &backward, 10_000).len(), 1);
+        assert_eq!(validate_temporal(&previous, &fast, 10_000).len(), 1);
+    }
+}
