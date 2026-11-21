@@ -6,3 +6,4 @@ results-ollama.log
 .env.*
 *.key
 *.pem
+assets/champions/
