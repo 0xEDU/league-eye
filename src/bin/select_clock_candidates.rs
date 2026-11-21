@@ -83,7 +83,17 @@ fn main() -> Result<()> {
             grouped.entry(timestamp).or_default().push(value);
         }
     }
-    let mut output = String::new();
+    let seed_timestamp_ms = args.seed_timestamp_ms.expect("verified seed is required");
+    let seed_seconds = args.seed_seconds.expect("verified seed is required");
+    let mut output = format!(
+        "{}\n",
+        serde_json::to_string(&Selection {
+            video_timestamp_ms: seed_timestamp_ms,
+            candidates_seconds: Vec::new(),
+            selected_seconds: Some(seed_seconds),
+            status: "verified_seed".to_string(),
+        })?
+    );
     let mut previous = args.seed_timestamp_ms.zip(args.seed_seconds);
     for (timestamp, mut candidates) in grouped {
         if args.seed_timestamp_ms.is_some_and(|seed| timestamp <= seed) {

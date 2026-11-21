@@ -80,6 +80,14 @@ cargo run --release --bin select_clock_candidates -- \
   --seed-seconds 132
 ```
 
+Evaluate the selected clock values with the same label fixture:
+
+```sh
+cargo run --release --bin evaluate_clock_selection -- \
+  --labels labels/clock-smoke.jsonl \
+  --selections results/clock-ensemble.jsonl
+```
+
 ## Reject inconsistent champion names
 
 Run independent portrait crops. This selector preserves every model candidate and emits a name only when one name receives the required number of votes without a tie. Repeated records from one crop count once. Conflicting retries from one crop do not vote.
