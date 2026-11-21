@@ -53,14 +53,23 @@ pub async fn extract(
     jpeg: &[u8],
     max_tokens: u16,
     prompt_profile: &str,
+    champion_candidates: Option<&str>,
 ) -> Result<Extraction> {
     let (prompt, format) = match prompt_profile {
-        "full" => (FULL_PROMPT, response_schema()),
-        "bottom-hud" => (BOTTOM_HUD_PROMPT, response_schema()),
-        "top-hud" => (TOP_HUD_PROMPT, response_schema()),
-        "clock-text" => (CLOCK_PROMPT, clock_response_schema()),
-        "resource-hud" => (RESOURCE_PROMPT, resource_response_schema()),
-        "portrait" => (PORTRAIT_PROMPT, champion_response_schema()),
+        "full" => (FULL_PROMPT.to_string(), response_schema()),
+        "bottom-hud" => (BOTTOM_HUD_PROMPT.to_string(), response_schema()),
+        "top-hud" => (TOP_HUD_PROMPT.to_string(), response_schema()),
+        "clock-text" => (CLOCK_PROMPT.to_string(), clock_response_schema()),
+        "resource-hud" => (RESOURCE_PROMPT.to_string(), resource_response_schema()),
+        "portrait" => {
+            let prompt = match champion_candidates {
+                Some(candidates) => format!(
+                    "{PORTRAIT_PROMPT} Choose only one exact name from this candidate list, or null: {candidates}."
+                ),
+                None => PORTRAIT_PROMPT.to_string(),
+            };
+            (prompt, champion_response_schema())
+        }
         _ => anyhow::bail!(
             "prompt profile must be full, bottom-hud, top-hud, clock-text, resource-hud, or portrait"
         ),

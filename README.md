@@ -26,6 +26,8 @@ scripts/fetch-champion-skin-portraits.sh Aphelios
 
 The skin cache supports candidate retrieval experiments but does not yet provide a reliable champion decision.
 
+For a controlled candidate-only portrait experiment, use `--champion-candidates 'Aphelios, Katarina, Sona, Soraka'` with `--prompt-profile portrait`.
+
 ## Run
 
 Place the source video at `probe-footage.mp4`, then run:

@@ -15,6 +15,7 @@
 - Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
 - Five manual portrait labels identify the early player as Aphelios. The multi-crop gate scores 4/5 on this small fixture and remains experimental.
 - Skin-aware pixel retrieval still ranks Katarina above the labeled Aphelios portrait, so it is rejected as a champion decision rule.
+- Constraining the vision model to four retrieved candidate names selected Sona on all five Aphelios labels, so candidate-only prompting is rejected for this model and crop.
 - KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
@@ -44,7 +45,7 @@
 - [x] Reject portrait names that do not reach a unique multi-crop consensus.
 - [x] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.
 - [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
-- [ ] Ask the vision model to choose only from retrieved candidates or return null.
+- [x] Test a vision-model choice from retrieved candidates or null.
 - [ ] Require a score margin before accepting a champion result.
 
 ## P2: Player HUD Fields
