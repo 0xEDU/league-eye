@@ -63,6 +63,8 @@ fn main() -> Result<()> {
         "labeled_frames": labels.len(),
         "predicted_frames": predicted,
         "exact_matches": exact,
+        "coverage": if labels.is_empty() { 0.0 } else { predicted as f64 / labels.len() as f64 },
+        "exact_match_precision": if predicted == 0 { None } else { Some(exact as f64 / predicted as f64) },
         "exact_match_rate": if labels.is_empty() { 0.0 } else { exact as f64 / labels.len() as f64 },
         "mean_absolute_error_seconds": if predicted == 0 { None } else { Some(absolute_error as f64 / predicted as f64) }
     });
