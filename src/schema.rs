@@ -101,7 +101,11 @@ pub fn validate(x: &Extraction) -> Vec<String> {
     e
 }
 
-pub fn validate_temporal(previous: &Extraction, current: &Extraction) -> Vec<String> {
+pub fn validate_temporal(
+    previous: &Extraction,
+    current: &Extraction,
+    video_elapsed_ms: u64,
+) -> Vec<String> {
     let mut errors = Vec::new();
     for (name, before, after) in [
         (
@@ -123,6 +127,14 @@ pub fn validate_temporal(previous: &Extraction, current: &Extraction) -> Vec<Str
             if after < before {
                 errors.push(format!("{name} decreased from {before} to {after}"));
             }
+        }
+    }
+    if let (Some(before), Some(after)) = (previous.game_time_seconds, current.game_time_seconds) {
+        let maximum_advance = video_elapsed_ms as f64 / 500.0 + 5.0;
+        if after > before && (after - before) as f64 > maximum_advance {
+            errors.push(format!(
+                "game_time_seconds advanced from {before} to {after} faster than the video interval"
+            ));
         }
     }
     errors

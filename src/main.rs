@@ -145,7 +145,11 @@ async fn main() -> Result<()> {
             let latency = began.elapsed().as_millis();
             let mut errors = schema::validate(&x);
             if let Some(previous) = persistence::latest_observation(&a.output, &source, &config)? {
-                errors.extend(schema::validate_temporal(&previous.extraction, &x));
+                errors.extend(schema::validate_temporal(
+                    &previous.extraction,
+                    &x,
+                    ms.saturating_sub(previous.video_timestamp_ms),
+                ));
             }
             let o = Observation {
                 video_fingerprint: source.clone(),
