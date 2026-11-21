@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Extraction {
     pub game_time_seconds: Option<u32>,
+    #[serde(default)]
+    pub raw_clock: Option<String>,
     pub champion: Option<String>,
     pub level: Option<u8>,
     pub kills: Option<u32>,

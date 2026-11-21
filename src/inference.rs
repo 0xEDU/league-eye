@@ -76,6 +76,7 @@ pub async fn extract(
                 .clock
                 .as_deref()
                 .and_then(crate::schema::parse_clock),
+            raw_clock: response.clock,
             ..Default::default()
         }
     } else {
