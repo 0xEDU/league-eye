@@ -11,28 +11,32 @@
 
 ## P0: Establish Measurement
 
-- [ ] Label 20 representative frames with game clock, champion, level, KDA, CS, health, and mana where readable.
-- [ ] Define field-level accuracy, null correctness, and hallucination metrics.
-- [ ] Build a reproducible evaluation command that runs the same labeled frames for every experiment.
+- [ ] Expand the manually verified clock set from 3 to 20 frames.
+- [ ] Label 20 representative frames with champion, level, KDA, CS, health, and mana where readable.
+- [x] Define exact-match and mean-absolute-error metrics for clock readings.
+- [x] Build a reproducible clock evaluation command for labeled frames.
 
 ## P1: Clock Detection
 
-- [ ] Test the tight timer crop `590:0:50:30` at the native 640×360 resolution.
-- [ ] Test modest upscale factors and JPEG qualities on the same labeled frames.
-- [ ] Add a clock parser that accepts only `m:ss`, then converts it to seconds.
-- [ ] Reject impossible or temporally inconsistent clock readings without replacing them.
+- [x] Test tight timer crop candidates at 640×360 resolution.
+- [x] Add a clock parser that accepts only `m:ss`, then converts it to seconds.
+- [x] Reject backward and implausibly fast clock changes without replacing them.
+- [ ] Test upscale factors and JPEG qualities on the expanded 20-frame label set.
+- [ ] Compare `605:0:35:25` with other crop candidates on the expanded label set.
 
 ## P1: Champion Detection
 
-- [ ] Locate and validate the player portrait crop across representative frames.
-- [ ] Build a local champion portrait reference set.
-- [ ] Retrieve the closest champion candidates from the portrait crop.
-- [ ] Ask the vision model to choose only from the retrieved candidates or return null.
+- [x] Locate the player portrait crop for the tested broadcast layout.
+- [x] Build a local cache of Riot Data Dragon default champion icons.
+- [x] Prototype pixel-distance and native feature-print retrieval.
+- [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
+- [ ] Ask the vision model to choose only from retrieved candidates or return null.
 - [ ] Require a score margin before accepting a champion result.
 
 ## P2: Player HUD Fields
 
-- [ ] Create separate crops and prompts for level, KDA, CS, health, and mana.
+- [ ] Label and map the broadcast-layout regions for level, KDA, CS, health, and mana.
+- [ ] Create separate crops and prompts for the mapped regions.
 - [ ] Define field-specific numeric ranges and temporal constraints.
 - [ ] Compare field-specific crops with full-frame extraction on labeled frames.
 
