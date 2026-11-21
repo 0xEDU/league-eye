@@ -37,7 +37,9 @@
 ## P2: Player HUD Fields
 
 - [ ] Label and map the broadcast-layout regions for level, KDA, CS, health, and mana.
-- [ ] Create separate crops and prompts for the mapped regions.
+- [x] Create a resource-only crop and schema for health and mana.
+- [ ] Verify whether resource readings represent current values, maximum values, or concatenated text.
+- [ ] Create separate crops and prompts for level, KDA, and CS.
 - [ ] Define field-specific numeric ranges and temporal constraints.
 - [ ] Compare field-specific crops with full-frame extraction on labeled frames.
 
