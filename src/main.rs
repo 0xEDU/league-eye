@@ -47,6 +47,8 @@ struct Args {
     prompt_profile: String,
     #[arg(long)]
     champion_candidates: Option<String>,
+    #[arg(long)]
+    clock_candidates: Option<String>,
     #[arg(long, default_value = "full-frame-v1")]
     experiment: String,
 }
@@ -90,7 +92,7 @@ async fn main() -> Result<()> {
     )?;
     let duration = video::duration_seconds(&meta)?;
     let source = fingerprint(&a.input)?;
-    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"resize_filter":a.resize_filter,"jpeg_quality":a.jpeg_quality,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"champion_candidates":a.champion_candidates,"experiment":a.experiment});
+    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"resize_filter":a.resize_filter,"jpeg_quality":a.jpeg_quality,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"champion_candidates":a.champion_candidates,"clock_candidates":a.clock_candidates,"experiment":a.experiment});
     let config = format!("{:x}", Sha256::digest(serde_json::to_vec(&cfg)?));
     let client = Client::new();
     inference::check_model(&client, &a.ollama, &a.model).await?;
@@ -148,6 +150,7 @@ async fn main() -> Result<()> {
                 a.max_tokens,
                 &a.prompt_profile,
                 a.champion_candidates.as_deref(),
+                a.clock_candidates.as_deref(),
             )
             .await?;
             let latency = began.elapsed().as_millis();
