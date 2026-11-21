@@ -33,6 +33,8 @@ struct Args {
     limit: Option<u64>,
     #[arg(long)]
     max_width: Option<u32>,
+    #[arg(long, default_value = "lanczos")]
+    resize_filter: String,
     #[arg(long)]
     crop: Option<String>,
     #[arg(long, default_value_t = 3)]
@@ -81,7 +83,7 @@ async fn main() -> Result<()> {
     )?;
     let duration = video::duration_seconds(&meta)?;
     let source = fingerprint(&a.input)?;
-    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"jpeg_quality":a.jpeg_quality,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"experiment":a.experiment});
+    let cfg = serde_json::json!({"interval":a.interval,"crop":a.crop,"max_width":a.max_width,"resize_filter":a.resize_filter,"jpeg_quality":a.jpeg_quality,"max_tokens":a.max_tokens,"start_seconds":a.start_seconds,"prompt_profile":a.prompt_profile,"experiment":a.experiment});
     let config = format!("{:x}", Sha256::digest(serde_json::to_vec(&cfg)?));
     let client = Client::new();
     inference::check_model(&client, &a.ollama, &a.model).await?;
@@ -121,8 +123,14 @@ async fn main() -> Result<()> {
         attempted += 1;
         let result = async {
             let prep = Instant::now();
-            let jpg =
-                video::frame_jpeg(&a.input, ms, a.crop.as_deref(), a.max_width, a.jpeg_quality)?;
+            let jpg = video::frame_jpeg(
+                &a.input,
+                ms,
+                a.crop.as_deref(),
+                a.max_width,
+                &a.resize_filter,
+                a.jpeg_quality,
+            )?;
             let preprocess = prep.elapsed().as_millis();
             let began = Instant::now();
             let x = inference::extract(

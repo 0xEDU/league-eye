@@ -37,6 +37,7 @@ pub fn frame_jpeg(
     timestamp_ms: u64,
     crop: Option<&str>,
     max_width: Option<u32>,
+    resize_filter: &str,
     quality: u8,
 ) -> Result<Vec<u8>> {
     let mut filters = Vec::new();
@@ -53,7 +54,11 @@ pub fn frame_jpeg(
         ));
     }
     if let Some(width) = max_width {
-        filters.push(format!("scale={width}:-2:flags=lanczos"));
+        anyhow::ensure!(
+            matches!(resize_filter, "lanczos" | "neighbor"),
+            "resize filter must be lanczos or neighbor"
+        );
+        filters.push(format!("scale={width}:-2:flags={resize_filter}"));
     }
     let filter = filters.join(",");
     let mut cmd = Command::new("ffmpeg");
