@@ -30,6 +30,7 @@
 - [x] Locate the player portrait crop for the tested broadcast layout.
 - [x] Build a local cache of Riot Data Dragon default champion icons.
 - [x] Prototype pixel-distance and native feature-print retrieval.
+- [x] Add a portrait-only VLM profile with a one-field schema.
 - [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
 - [ ] Ask the vision model to choose only from retrieved candidates or return null.
 - [ ] Require a score margin before accepting a champion result.
