@@ -14,6 +14,7 @@
 - Multiple crops can agree on an incorrect clock value, so source votes remain audit data rather than an acceptance rule.
 - Lanczos scaling with JPEG quality 1 is exact on the first 7 clean labels. Nearest-neighbor scaling scored 0/7 and is rejected for this reader.
 - Five manual portrait labels identify the early player as Aphelios. The multi-crop gate scores 4/5 on this small fixture and remains experimental.
+- Skin-aware pixel retrieval still ranks Katarina above the labeled Aphelios portrait, so it is rejected as a champion decision rule.
 - KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
@@ -38,6 +39,7 @@
 - [x] Locate the player portrait crop for the tested broadcast layout.
 - [x] Build a local cache of Riot Data Dragon default champion icons.
 - [x] Prototype pixel-distance and native feature-print retrieval.
+- [x] Add a local cache path for per-skin round HUD portraits.
 - [x] Add a portrait-only VLM profile with a one-field schema.
 - [x] Reject portrait names that do not reach a unique multi-crop consensus.
 - [x] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.

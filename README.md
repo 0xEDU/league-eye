@@ -16,6 +16,16 @@ ollama serve
 ollama pull qwen3-vl:2b-instruct-q4_K_M
 ```
 
+## Cache skin portrait references
+
+Fetch round HUD portraits for one champion and keep them out of Git:
+
+```sh
+scripts/fetch-champion-skin-portraits.sh Aphelios
+```
+
+The skin cache supports candidate retrieval experiments but does not yet provide a reliable champion decision.
+
 ## Run
 
 Place the source video at `probe-footage.mp4`, then run:
