@@ -21,6 +21,7 @@
 - [x] Test tight timer crop candidates at 640×360 resolution.
 - [x] Add a clock parser that accepts only `m:ss`, then converts it to seconds.
 - [x] Reject backward and implausibly fast clock changes without replacing them.
+- [x] Select among multiple crop candidates only when they match a manually verified clock anchor and expected interval.
 - [ ] Test upscale factors and JPEG qualities on the expanded 20-frame label set.
 - [ ] Compare `605:0:35:25` with other crop candidates on the expanded label set.
 
