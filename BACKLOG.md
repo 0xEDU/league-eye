@@ -3,6 +3,7 @@
 ## Current State
 
 - Video sampling, FFmpeg cropping, local Ollama inference, typed JSONL output, resume, and validation work.
+- A non-resume run now rejects an output directory with observations, preventing duplicate records after an interrupted run.
 - The instruction model produces valid JSON reliably.
 - Clock readings from the broad top crop are not reliable enough for use.
 - Champion, KDA, CS, health, and mana values are not reliable enough for use.

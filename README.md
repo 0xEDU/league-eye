@@ -58,7 +58,7 @@ cargo run --release -- \
 cargo run --release -- --input probe-footage.mp4 --output results --resume
 ```
 
-`observations.jsonl` is the source of truth. The program flushes each record before atomically replacing `checkpoint.json`.
+`observations.jsonl` is the source of truth. The program flushes each record before atomically replacing `checkpoint.json`. A non-resume run refuses an output directory that already contains observations, so use `--resume` after interruption.
 
 ## Evaluate clock experiments
 

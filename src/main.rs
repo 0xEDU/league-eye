@@ -76,6 +76,10 @@ async fn main() -> Result<()> {
         a.input.display()
     );
     fs::create_dir_all(&a.output)?;
+    anyhow::ensure!(
+        a.resume || !a.output.join("observations.jsonl").exists(),
+        "output already contains observations; use --resume or choose a new output directory"
+    );
     let meta = video::metadata(&a.input)?;
     fs::write(
         a.output.join("video.json"),
