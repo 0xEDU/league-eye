@@ -7,7 +7,8 @@
 - Clock readings from the broad top crop are not reliable enough for use.
 - Champion, KDA, CS, health, and mana values are not reliable enough for use.
 - Validation preserves raw model values and records implausible or temporally inconsistent values.
-- No independently verified labels exist yet, so field accuracy is unknown.
+- Seven manually verified clock labels show an exact 7/7 result for crop `605:0:35:25` in one clean video segment.
+- Champion, KDA, CS, health, and mana accuracy remain unverified.
 
 ## P0: Establish Measurement
 
@@ -31,6 +32,8 @@
 - [x] Build a local cache of Riot Data Dragon default champion icons.
 - [x] Prototype pixel-distance and native feature-print retrieval.
 - [x] Add a portrait-only VLM profile with a one-field schema.
+- [x] Reject portrait names that do not reach a unique multi-crop consensus.
+- [ ] Verify the apparent Aphelios multi-crop consensus against a manual portrait label.
 - [ ] Obtain skin-specific portrait references or another candidate source; default-icon retrieval was not accurate.
 - [ ] Ask the vision model to choose only from retrieved candidates or return null.
 - [ ] Require a score margin before accepting a champion result.

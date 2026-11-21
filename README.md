@@ -80,6 +80,17 @@ cargo run --release --bin select_clock_candidates -- \
   --seed-seconds 132
 ```
 
+## Reject inconsistent champion names
+
+Run independent portrait crops. This selector preserves every model candidate and emits a name only when one name receives the required number of votes without a tie. Repeated records from one crop count once. Conflicting retries from one crop do not vote.
+
+```sh
+cargo run --release --bin select_champion_candidates -- \
+  --observations results/portrait-a/observations.jsonl results/portrait-b/observations.jsonl results/portrait-c/observations.jsonl \
+  --output results/champion-consensus.jsonl \
+  --min-votes 2
+```
+
 ## Summarize an experiment
 
 ```sh
