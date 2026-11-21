@@ -1,7 +1,11 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fs, path::PathBuf};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    path::PathBuf,
+};
 
 #[derive(Parser)]
 struct Args {
@@ -45,6 +49,19 @@ fn load(path: &PathBuf) -> Result<Vec<Observation>> {
         .context("decode observation JSONL")
 }
 
+fn source_values(values: Vec<(u64, u32)>) -> BTreeMap<u64, u32> {
+    let mut grouped = BTreeMap::<u64, BTreeSet<u32>>::new();
+    for (timestamp, value) in values {
+        grouped.entry(timestamp).or_default().insert(value);
+    }
+    grouped
+        .into_iter()
+        .filter_map(|(timestamp, values)| {
+            (values.len() == 1).then(|| (timestamp, values.into_iter().next().expect("one value")))
+        })
+        .collect()
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
     anyhow::ensure!(
@@ -53,13 +70,17 @@ fn main() -> Result<()> {
     );
     let mut grouped: BTreeMap<u64, Vec<u32>> = BTreeMap::new();
     for path in &args.observations {
-        for observation in load(path)? {
-            if let Some(value) = observation.extraction.game_time_seconds {
-                grouped
-                    .entry(observation.video_timestamp_ms)
-                    .or_default()
-                    .push(value);
-            }
+        let values = load(path)?
+            .into_iter()
+            .filter_map(|observation| {
+                observation
+                    .extraction
+                    .game_time_seconds
+                    .map(|value| (observation.video_timestamp_ms, value))
+            })
+            .collect();
+        for (timestamp, value) in source_values(values) {
+            grouped.entry(timestamp).or_default().push(value);
         }
     }
     let mut output = String::new();
@@ -96,4 +117,16 @@ fn main() -> Result<()> {
     }
     fs::write(&args.output, output).with_context(|| format!("write {}", args.output.display()))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::source_values;
+
+    #[test]
+    fn retries_count_once_and_conflicts_are_suppressed() {
+        let values = source_values(vec![(10, 120), (10, 120), (20, 130), (20, 131)]);
+        assert_eq!(values.get(&10), Some(&120));
+        assert!(!values.contains_key(&20));
+    }
 }
