@@ -42,6 +42,19 @@ pub fn response_schema() -> serde_json::Value {
     },"required":["game_time_seconds","champion","level","kills","deaths","assists","cs","health","mana"],"additionalProperties":false})
 }
 
+pub fn clock_response_schema() -> serde_json::Value {
+    serde_json::json!({"type":"object","properties":{
+      "clock":{"type":["string","null"],"pattern":"^[0-9]{1,2}:[0-5][0-9]$"}
+    },"required":["clock"],"additionalProperties":false})
+}
+
+pub fn parse_clock(value: &str) -> Option<u32> {
+    let (minutes, seconds) = value.split_once(':')?;
+    let minutes: u32 = minutes.parse().ok()?;
+    let seconds: u32 = seconds.parse().ok()?;
+    (seconds < 60).then_some(minutes * 60 + seconds)
+}
+
 pub fn add_uncertain_fields(x: &mut Extraction) {
     let fields = [
         ("game_time_seconds", x.game_time_seconds.is_none()),
