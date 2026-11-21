@@ -19,6 +19,8 @@ struct Args {
     fps: u32,
     #[arg(long, default_value_t = 7.0)]
     threshold: f64,
+    #[arg(long, default_value_t = 0)]
+    bright_pixel_threshold: u8,
     #[arg(long, default_value_t = 400)]
     refractory_ms: u64,
     #[arg(long)]
@@ -83,12 +85,22 @@ fn main() -> Result<()> {
     let mut ticks = Vec::new();
     let mut last_tick_ms = None;
     for (index, pair) in frames.windows(2).enumerate() {
-        let score = pair[0]
+        let mut count = 0_u64;
+        let difference = pair[0]
             .iter()
             .zip(pair[1])
-            .map(|(left, right)| left.abs_diff(*right) as u64)
-            .sum::<u64>() as f64
-            / bytes_per_frame as f64;
+            .filter_map(|(left, right)| {
+                ((*left).max(*right) >= args.bright_pixel_threshold).then(|| {
+                    count += 1;
+                    left.abs_diff(*right) as u64
+                })
+            })
+            .sum::<u64>();
+        let score = if count == 0 {
+            0.0
+        } else {
+            difference as f64 / count as f64
+        };
         let timestamp_ms =
             args.start_seconds * 1000 + ((index + 1) * 1000 / args.fps as usize) as u64;
         if score >= args.threshold
