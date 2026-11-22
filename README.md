@@ -1,138 +1,50 @@
-# League Vision
+# League-eye
 
-League Vision samples a local MP4 with FFmpeg and sends each frame to a local Ollama vision model. It writes one durable JSON record per completed frame.
+League-eye is a video-first League of Legends timeline analyzer. It turns a local MP4 into factual, confidence-scored event evidence and a readable timeline.
+
+It reports what is visible and when it is visible. It does not infer player intent.
 
 ## Requirements
 
 - Rust 1.89 or later
 - `ffmpeg` and `ffprobe` on `PATH`
-- Ollama running at `http://localhost:11434`
-- The local `qwen3-vl:2b-instruct-q4_K_M` model
-
-Start Ollama, then install the model only when it is absent:
+- Ollama at `http://localhost:11434`
+- `qwen3-vl:2b-instruct-q4_K_M` installed locally
 
 ```sh
-ollama serve
 ollama pull qwen3-vl:2b-instruct-q4_K_M
 ```
 
-## Cache skin portrait references
-
-Fetch round HUD portraits for one champion and keep them out of Git:
+## Analyze a video
 
 ```sh
-scripts/fetch-champion-skin-portraits.sh Aphelios
+cargo run --release -- analyze \
+  --input match.mp4 \
+  --output run
 ```
 
-The skin cache supports candidate retrieval experiments but does not yet provide a reliable champion decision.
+League-eye samples the video, uses scene changes to propose windows, and uses local vision to classify visible death, recall, objective, and fight evidence.
 
-For a controlled candidate-only portrait experiment, use `--champion-candidates 'Aphelios, Katarina, Sona, Soraka'` with `--prompt-profile portrait`.
+## Output
 
-## Run
+- `run.json`: input identity and analysis configuration.
+- `evidence.jsonl`: append-only visual evidence records.
+- `timeline.jsonl`: ordered, merged event candidates.
+- `timeline.md`: readable event timeline.
+- `errors.jsonl`: recoverable sampling or vision failures.
+- `checkpoint.json`: latest completed evidence record.
 
-Place the source video at `probe-footage.mp4`, then run:
-
-```sh
-cargo run --release -- --input probe-footage.mp4 --output results
-```
-
-The default interval is 10 seconds. Use `--limit 10` for an initial test. Use `--max-width 1280` to benchmark a resized full frame. Use `--crop x:y:width:height` only for a separate crop experiment.
-
-For the tested 640×360 broadcast layout, the evaluated timer reader uses a tight top-right crop:
-
-```sh
-cargo run --release -- \
-  --input probe-footage.mp4 \
-  --output results/clock \
-  --crop 605:0:35:25 \
-  --max-width 1200 \
-  --max-tokens 64 \
-  --prompt-profile clock-text \
-  --experiment clock-text-v1
-```
-
-The health and mana experiment uses a separate bottom-HUD crop:
-
-```sh
-cargo run --release -- \
-  --input probe-footage.mp4 \
-  --output results/resources \
-  --crop 180:310:260:50 \
-  --max-width 1080 \
-  --max-tokens 128 \
-  --prompt-profile resource-hud \
-  --experiment resource-hud-v1
-```
+Each event includes confidence, confirmation state, and source video timestamps. Frame images are regenerated from the MP4 when needed.
 
 ## Resume
 
 ```sh
-cargo run --release -- --input probe-footage.mp4 --output results --resume
+cargo run --release -- analyze \
+  --input match.mp4 \
+  --output run \
+  --resume
 ```
 
-`observations.jsonl` is the source of truth. The program flushes each record before atomically replacing `checkpoint.json`. A non-resume run refuses an output directory that already contains observations, so use `--resume` after interruption. Each output directory accepts only one active run. If a stopped process leaves `run.lock`, first verify that no run is active, then remove that lock before resuming.
+## Development tools
 
-## Evaluate clock experiments
-
-```sh
-cargo run --release --bin evaluate_clock -- \
-  --labels labels/clock-smoke.jsonl \
-  --observations results/clock-text-x605/observations.jsonl
-```
-
-## Select clock candidates
-
-Use a manually verified clock reading as the seed. The selector preserves every crop candidate, reports the source count for each candidate, and returns null when no candidate fits the expected next clock range. Source agreement is diagnostic data, not a guarantee of correctness.
-
-```sh
-cargo run --release --bin select_clock_candidates -- \
-  --observations results/clock-text-x605-v2/observations.jsonl \
-  --output results/clock-ensemble.jsonl \
-  --seed-timestamp-ms 90000 \
-  --seed-seconds 132
-```
-
-Evaluate the selected clock values with the same label fixture:
-
-```sh
-cargo run --release --bin evaluate_clock_selection -- \
-  --labels labels/clock-smoke.jsonl \
-  --selections results/clock-ensemble.jsonl
-```
-
-## Reject inconsistent champion names
-
-Run independent portrait crops. This selector preserves every model candidate and emits a name only when one name receives the required number of votes without a tie. Repeated records from one crop count once. Conflicting retries from one crop do not vote.
-
-```sh
-cargo run --release --bin select_champion_candidates -- \
-  --observations results/portrait-a/observations.jsonl results/portrait-b/observations.jsonl results/portrait-c/observations.jsonl \
-  --output results/champion-consensus.jsonl \
-  --min-votes 2
-```
-
-Evaluate selected champion names with a manual label fixture:
-
-```sh
-cargo run --release --bin evaluate_champion_selection -- \
-  --labels labels/champion-smoke.jsonl \
-  --selections results/champion-consensus.jsonl
-```
-
-## Summarize an experiment
-
-```sh
-cargo run --release --bin summarize_observations -- \
-  --observations results/clock-text-x605-v2/observations.jsonl \
-  --progress results/clock-text-x605-v2/progress.json
-```
-
-## Results
-
-- `video.json`: FFprobe metadata
-- `observations.jsonl`: successful typed model observations
-- `errors.jsonl`: per-frame failures
-- `checkpoint.json`: restart position and counters
-- `progress.json`: current run rate and counts
-
-Stop with Ctrl-C. Completed records remain available. The pipeline stores only one JPEG frame in memory at a time and does not retain sampled images.
+The other Cargo binaries are experiments for HUD extraction, clock evaluation, portrait retrieval, and diagnostics. They are not part of the MVP analysis path.
