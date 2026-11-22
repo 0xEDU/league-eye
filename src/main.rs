@@ -40,6 +40,8 @@ struct AnalyzeArgs {
     sample_interval_seconds: u64,
     #[arg(long, default_value_t = 10.0)]
     scene_change_threshold: f64,
+    #[arg(long)]
+    limit: Option<u64>,
     #[arg(long, default_value = "qwen3-vl:2b-instruct-q4_K_M")]
     model: String,
     #[arg(long, default_value = "http://localhost:11434")]
@@ -126,6 +128,9 @@ async fn analyze(args: AnalyzeArgs) -> Result<()> {
     let mut attempted = 0_u64;
     let mut failed = 0_u64;
     for second in (0..duration.ceil() as u64).step_by(args.sample_interval_seconds as usize) {
+        if args.limit.is_some_and(|limit| attempted >= limit) {
+            break;
+        }
         let timestamp_ms = second * 1_000;
         if completed_timestamps.contains(&timestamp_ms) {
             continue;
