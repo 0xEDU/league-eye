@@ -2,7 +2,7 @@
 
 ## Core Idea
 
-League-eye is descriptive League of Legends analytics.
+League-eye is video-first, descriptive League of Legends analytics.
 
 It reconstructs what happened in a game, when it happened, and the game state around each event.
 
@@ -19,8 +19,10 @@ Examples:
 
 ## Scope
 
-League-eye states the what and when. It does not infer hidden player intent or claim why a player acted.
+League-eye analyzes footage to state the what and when. It does not infer hidden player intent or claim why a player acted.
 
-Structured replay or client data is the preferred source of truth. Video is optional context and a fallback source when structured data is unavailable.
+Video is the primary source. It provides the state, events, and timing used to reconstruct the factual timeline.
 
-Pixel extraction is not the product goal. It is only useful when it supports a factual timeline.
+Structured replay or client data can validate, enrich, or compare against the video timeline when available. It is not required for the core product.
+
+Pixel extraction is a core capability because it turns video evidence into timeline data. It should be designed around the factual timeline rather than treated as a general-purpose HUD-reading exercise.
