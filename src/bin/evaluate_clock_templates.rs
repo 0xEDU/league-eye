@@ -103,7 +103,7 @@ fn main() -> Result<()> {
     let mut error = 0_u64;
     for (index, (label, image)) in images.iter().enumerate() {
         let mut output = [0_u8; 4];
-        for position in 0..4 {
+        for (position, digit) in output.iter_mut().enumerate() {
             let current = digit_signature(image, position, &args);
             let (_, candidate) = images
                 .iter()
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
                     )
                 })
                 .expect("at least two labels");
-            output[position] = digits(candidate.0.game_time_seconds)[position];
+            *digit = digits(candidate.0.game_time_seconds)[position];
         }
         let value = u32::from(output[0]) * 600
             + u32::from(output[1]) * 60

@@ -89,11 +89,10 @@ fn main() -> Result<()> {
         let difference = pair[0]
             .iter()
             .zip(pair[1])
-            .filter_map(|(left, right)| {
-                ((*left).max(*right) >= args.bright_pixel_threshold).then(|| {
-                    count += 1;
-                    left.abs_diff(*right) as u64
-                })
+            .filter(|(left, right)| (**left).max(**right) >= args.bright_pixel_threshold)
+            .map(|(left, right)| {
+                count += 1;
+                left.abs_diff(*right) as u64
             })
             .sum::<u64>();
         let score = if count == 0 {
