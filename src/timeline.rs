@@ -26,6 +26,9 @@ pub fn build(evidence: &[EvidenceRecord], merge_window_ms: u64) -> Vec<TimelineE
             event.end_timestamp_ms = record.frame.video_timestamp_ms;
             event.confidence = event.confidence.max(record.confidence);
             event.evidence_ids.push(record.evidence_id);
+            if event.confidence >= 0.85 && event.evidence_ids.len() >= 2 {
+                event.confirmation = ConfirmationState::Confirmed;
+            }
             continue;
         }
         let ordinal = events.len() + 1;
@@ -35,11 +38,7 @@ pub fn build(evidence: &[EvidenceRecord], merge_window_ms: u64) -> Vec<TimelineE
             event_kind: record.observed_kind.clone(),
             start_timestamp_ms: record.frame.video_timestamp_ms,
             end_timestamp_ms: record.frame.video_timestamp_ms,
-            confirmation: if record.confidence >= 0.85 {
-                ConfirmationState::Confirmed
-            } else {
-                ConfirmationState::Uncertain
-            },
+            confirmation: ConfirmationState::Uncertain,
             confidence: record.confidence,
             evidence_ids: vec![record.evidence_id],
             factual_summary: record.factual_summary,
@@ -83,5 +82,18 @@ mod tests {
         let mut unknown = evidence("unknown", 1_000);
         unknown.observed_kind = EvidenceKind::Unknown;
         assert!(build(&[unknown], 1_000).is_empty());
+    }
+
+    #[test]
+    fn requires_multiple_evidence_records_for_confirmation() {
+        let mut first = evidence("a", 1_000);
+        first.confidence = 0.9;
+        let mut second = evidence("b", 1_500);
+        second.confidence = 0.9;
+        let events = build(&[first, second], 1_000);
+        assert_eq!(
+            events[0].confirmation,
+            crate::domain::ConfirmationState::Confirmed
+        );
     }
 }
