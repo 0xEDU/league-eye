@@ -1,6 +1,5 @@
 mod inference;
 mod persistence;
-mod schema;
 mod video;
 
 use anyhow::Result;
@@ -147,7 +146,7 @@ async fn analyze(args: AnalyzeArgs) -> Result<()> {
             Ok(frame) => frame,
             Err(error) => {
                 failed += 1;
-                persistence::append(
+                persistence::append_jsonl(
                     &errors_path,
                     &serde_json::json!({"timestamp_ms":timestamp_ms,"error":format!("{error:#}")}),
                 )?;
@@ -172,7 +171,7 @@ async fn analyze(args: AnalyzeArgs) -> Result<()> {
             Ok(classification) => classification,
             Err(error) => {
                 failed += 1;
-                persistence::append(
+                persistence::append_jsonl(
                     &errors_path,
                     &serde_json::json!({"timestamp_ms":timestamp_ms,"error":format!("{error:#}")}),
                 )?;
@@ -200,7 +199,7 @@ async fn analyze(args: AnalyzeArgs) -> Result<()> {
             factual_summary: classification.summary,
             validation_notes,
         };
-        persistence::append(&evidence_path, &record)?;
+        persistence::append_jsonl(&evidence_path, &record)?;
         evidence.push(record);
         fs::write(
             &checkpoint_path,
@@ -212,7 +211,7 @@ async fn analyze(args: AnalyzeArgs) -> Result<()> {
     let events = timeline::build(&evidence, args.sample_interval_seconds * 1_500);
     let timeline_path = args.output.join("timeline.jsonl");
     for event in &events {
-        persistence::append(&timeline_path, event)?;
+        persistence::append_jsonl(&timeline_path, event)?;
     }
     fs::write(args.output.join("timeline.md"), report::markdown(&events))?;
     Ok(())
