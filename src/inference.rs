@@ -8,6 +8,12 @@ use reqwest::Client;
 use serde::Deserialize;
 use std::time::Duration;
 
+pub struct EventClassification {
+    pub kind: String,
+    pub confidence: f64,
+    pub summary: String,
+}
+
 const FULL_PROMPT: &str = "Read only visible League of Legends HUD values. Return null for every unreadable or absent value. Do not infer. game_time_seconds is the in-game clock in seconds, never the video time. champion must be a displayed champion name. Return only data matching the supplied schema.";
 const BOTTOM_HUD_PROMPT: &str = "This image is the bottom player HUD of a League of Legends game. Read only clearly visible player champion, level, KDA, creep score, health, and mana values. Set game_time_seconds to null. Return null for unreadable values. Do not infer. Return only data matching the supplied schema.";
 const TOP_HUD_PROMPT: &str = "This image is the top HUD of a League of Legends game. Read only the clearly visible in-game clock and convert it to seconds. Set all other fields to null. Do not infer. Return only data matching the supplied schema.";
@@ -30,6 +36,13 @@ struct ClockResponse {
 #[derive(Deserialize)]
 struct ChampionResponse {
     champion: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct EventResponse {
+    kind: String,
+    confidence: f64,
+    summary: String,
 }
 pub async fn check_model(client: &Client, endpoint: &str, model: &str) -> Result<()> {
     let v: serde_json::Value = client
@@ -124,4 +137,37 @@ pub async fn extract(
     };
     crate::schema::add_uncertain_fields(&mut extraction);
     Ok(extraction)
+}
+
+pub async fn classify_event(
+    client: &Client,
+    endpoint: &str,
+    model: &str,
+    jpeg: &[u8],
+) -> Result<EventClassification> {
+    let prompt = "Classify only visible League of Legends broadcast evidence in this frame. Choose one: death, recall, objective, fight, or unknown. A death requires a visible death state or kill feed evidence. A recall requires a visible recall state. An objective requires a visible objective announcement, health bar, or take. A fight requires visible multi-champion combat. Return unknown when the frame does not prove one of these.";
+    let format = serde_json::json!({"type":"object","properties":{
+        "kind":{"type":"string","enum":["death","recall","objective","fight","unknown"]},
+        "confidence":{"type":"number","minimum":0,"maximum":1},
+        "summary":{"type":"string"}
+    },"required":["kind","confidence","summary"],"additionalProperties":false});
+    let body = serde_json::json!({"model":model,"prompt":prompt,"images":[STANDARD.encode(jpeg)],"format":format,"stream":false,"options":{"temperature":0,"num_predict":128}});
+    let response: Generate = client
+        .post(format!("{endpoint}/api/generate"))
+        .timeout(Duration::from_secs(120))
+        .json(&body)
+        .send()
+        .await
+        .context("request Ollama event classification")?
+        .error_for_status()?
+        .json()
+        .await
+        .context("decode Ollama event response")?;
+    let event: EventResponse = serde_json::from_str(&response.response)
+        .with_context(|| format!("decode event JSON: {}", response.response))?;
+    Ok(EventClassification {
+        kind: event.kind,
+        confidence: event.confidence,
+        summary: event.summary,
+    })
 }
