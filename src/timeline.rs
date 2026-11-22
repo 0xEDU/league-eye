@@ -7,7 +7,10 @@ pub fn build(evidence: &[EvidenceRecord], merge_window_ms: u64) -> Vec<TimelineE
     ordered.sort_by_key(|record| record.frame.video_timestamp_ms);
     let mut events = Vec::new();
     for record in ordered {
-        if record.observed_kind == EvidenceKind::SceneChange {
+        if matches!(
+            record.observed_kind,
+            EvidenceKind::SceneChange | EvidenceKind::Unknown
+        ) {
             continue;
         }
         let can_merge = events.last().is_some_and(|event: &TimelineEvent| {
@@ -73,5 +76,12 @@ mod tests {
         let events = build(&[evidence("a", 1_000), evidence("b", 1_500)], 1_000);
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].evidence_ids, ["a", "b"]);
+    }
+
+    #[test]
+    fn excludes_unknown_evidence_from_the_timeline() {
+        let mut unknown = evidence("unknown", 1_000);
+        unknown.observed_kind = EvidenceKind::Unknown;
+        assert!(build(&[unknown], 1_000).is_empty());
     }
 }
